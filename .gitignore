@@ -25,5 +25,4 @@ Thumbs.db
 obj/
 *.orig
 *.nupkg
-.paket/
 packages/
