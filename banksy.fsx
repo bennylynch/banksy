@@ -118,7 +118,7 @@ let mattaks =
 
 //Suave bits
 
-let timer = new Timers.Timer(interval = 1000. , Enabled=true)
+let timer = new Timers.Timer(interval = 500. , Enabled=true)
 // Cached version of: https://en.wikipedia.org/wiki/List_of_time_zones_by_country
 type TimeZones = HtmlProvider<"data/List_of_time_zones_by_country.html">
 let reg = System.Text.RegularExpressions.Regex("""UTC([\+\-][0-9][0-9]\:[0-9][0-9])?""")
