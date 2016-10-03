@@ -26,3 +26,4 @@ obj/
 *.orig
 *.nupkg
 packages/
+config.fsx

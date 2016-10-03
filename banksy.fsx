@@ -1,6 +1,7 @@
 ﻿#r"packages/FSharp.Data/lib/net40/FSharp.Data.dll"
 #r"packages/Suave/lib/net40/Suave.dll"
 #load"async.fs"
+#load"config.fsx"
 open System
 open System.Collections.Generic
 open System.Text.RegularExpressions
@@ -15,6 +16,7 @@ open Suave.Sockets.AsyncSocket
 open Suave.WebSocket
 open Suave.Utils
 open AsyncHelpers
+open Config
 
 //type to model things happening somewhere, at some time.
 type Event =
@@ -25,8 +27,7 @@ type Event =
       ImgSrc : string
     }
 
-module Config =
-    let [<Literal>] BingKey = "AptuYj2KB2MVNVuqw3b9pl33v3ba9KPTirN-2OKXLw3Y6ldA97CtBX2ibWZhN9GH"
+
 module Bing = 
   // Use JSON provider to get a type for calling the API
   let [<Literal>] BingSample = "http://dev.virtualearth.net/REST/v1/Locations?query=Prague&includeNeighborhood=1&maxResults=5&key=" + Config.BingKey  
@@ -108,7 +109,6 @@ let mattaks =
         let dates = MassiveAttackEvents.Load(sprintf "http://www.bandsintown.com/MassiveAttack/past_events?page=%d" i)
         dates.Tables.``Past Dates``.Rows |> Seq.map (fun r -> 
                         let city = r.Location.Split([|','|]).[0].ToUpper()
-                        //let country = r.Location.Split([|','|]).[1].ToUpper()
                         let lat,long,name = match Bing.locate city with
                                             |Some(lat,long) -> lat,long,city
                                             |None           -> 0.,0.,city 
@@ -159,22 +159,11 @@ type JsonTypes = JsonProvider<"""{
         "zones": [ "UTC", "UTC+00:00" ] }
   }""">
 
-let _,mattakGigEvents =
+let eventStream =
     timer.Elapsed |> Observable.scan (fun count _ -> count + 1) 0 
                   |> Observable.map  (fun i -> printfn "%A" i
                                                let event = mattaks.[i % mattaks.Length]
-                                               JsonTypes.SocketMapEvent(event.Lat  |> decimal, 
-                                                                        event.Long |> decimal,
-                                                                        event.Name,
-                                                                        event.Occurred,
-                                                                        event.ImgSrc,
-                                                                        "3d").JsonValue.ToString()
-                                    )
-                  |> Observable.start
-let _,banksyEvents =
-    timer.Elapsed |> Observable.scan (fun count _ -> count + 1) 0 
-                  |> Observable.map  (fun i -> let year = (mattaks.[i % mattaks.Length]).Occurred.Year
-                                               let yearBanksys = match combinedBanksysByYear.TryGetValue year with
+                                               let yearBanksys = match combinedBanksysByYear.TryGetValue event.Occurred.Year with
                                                                  |true,bs->
                                                                        bs |> List.map (fun event ->
                                                                                JsonTypes.SocketMapEvent(event.Lat  |> decimal, 
@@ -184,9 +173,16 @@ let _,banksyEvents =
                                                                                                         event.ImgSrc,
                                                                                                         "banksy").JsonValue) |> Array.ofList
                                                                  |false,_ -> [||]
-                                               JsonValue.Array(yearBanksys).ToString()
-                                    )
-                  |> Observable.start
+                                               JsonTypes.SocketMapEvent(event.Lat  |> decimal, 
+                                                                        event.Long |> decimal,
+                                                                        event.Name,
+                                                                        event.Occurred,
+                                                                        event.ImgSrc,
+                                                                        "3d").JsonValue.ToString()
+                                               ,JsonValue.Array(yearBanksys).ToString()
+                                     )
+let _,mattakGigEvents = eventStream |> Observable.map (fun (m,b) -> m)  |> Observable.start
+let _,banksyEvents    = eventStream |> Observable.map (fun (m,b) -> b ) |> Observable.start
 
 // Passes updates from IObservable<string> to a socket
 let socketOfObservable (updates:IObservable<string>) (webSocket:WebSocket) cx = socket {
@@ -202,8 +198,8 @@ let timeZonesJson =
 
 let webPart =
     choose [
-        path "/mattaks" >=> handShake (socketOfObservable mattakGigEvents)
-        path "/banksys" >=> handShake (socketOfObservable banksyEvents)
+        path "/mattaks" >=> handShake ( socketOfObservable mattakGigEvents )
+        path "/banksys" >=> handShake ( socketOfObservable banksyEvents )
         path "/zones" >=> Successful.OK timeZonesJson
         pathRegex "(.*)\.(css|js|html|jpg)" >=> Files.browseHome
     ]
