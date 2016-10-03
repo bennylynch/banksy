@@ -16,12 +16,10 @@ open Suave.WebSocket
 open Suave.Utils
 open AsyncHelpers
 
-let firstOrNone seq = Seq.tryFind (fun _ -> true) seq
-
+//type to model things happening somewhere, at some time.
 type Event =
     { Occurred : DateTime
       Name : string
-      //City : string
       Lat : float
       Long : float 
       ImgSrc : string
@@ -62,14 +60,18 @@ let a = BanksyScraper.Load("https://www.canvasartrocks.com/blogs/posts/70529347-
 let yrPattern = "(20\d{2})"
 let latlongPattern = "(\d+\.\d+,-?\d+.\d+)"
 
-let els = a.Html.Descendants("P")
+let els = a.Html.CssSelect(".blog_c").[0].Descendants("P")
             |> Seq.map (fun el -> el, el.CssSelect("img"), el.CssSelect("a[target='_blank'][href*='maps']"))
             |> List.ofSeq
             |> List.filter (fun (a,b,c) -> (b.IsEmpty && c.IsEmpty) |> not)
 
 let banksysByYear = 
     [ for i in 1 .. 2 .. els.Length - 2 -> els.[i], els.[i + 1] ]
-        |> List.filter (fun ((imgP,img,mapA'),(mapP,img',mapA)) -> (not (img.IsEmpty) && (mapA'.IsEmpty)) && ((img'.IsEmpty) && not (mapA.IsEmpty)))
+        |> List.filter (fun ((imgP,img,mapA'),(mapP,img',mapA)) -> 
+                (not (img.IsEmpty) && (mapA'.IsEmpty)) && ((img'.IsEmpty) && not (mapA.IsEmpty))
+                //|| 
+                // ((img.IsEmpty) && not (mapA'.IsEmpty)) && (not (img'.IsEmpty) && (mapA.IsEmpty))
+                )
         |> List.map ( fun ((imgP,img,mapA'),(mapP,img',mapA)) -> let year = Regex.Match(mapP.InnerText(), yrPattern)
                                                                  let imgsrc = img.[0].AttributeValue("src")
                                                                  let latLong = Regex.Match(mapA.[0].Attribute("href").Value(), latlongPattern)
@@ -79,7 +81,25 @@ let banksysByYear =
         |> List.filter (fun (yr,img,latlong,name) -> yr.Success && latlong.Success)
         |> List.map    (fun (yr,img,latlong,name) -> let latlong' = latlong.Value.Split ',' |> Array.map float
                                                      {Occurred=DateTime(yr.Value |> int,1,1);ImgSrc=img; Lat=latlong'.[0];Long=latlong'.[1];Name=name})
-        |> List.groupBy (fun e -> e.Occurred.Year) |> dict
+        //|> List.groupBy (fun e -> e.Occurred.Year) |> dict
+let banksysByYear2 = 
+    [ for i in 1 .. 2 .. els.Length - 2 -> els.[i], els.[i + 1] ]
+        |> List.filter (fun ((imgP,img,mapA'),(mapP,img',mapA)) -> 
+                //(not (img.IsEmpty) && (mapA'.IsEmpty)) && ((img'.IsEmpty) && not (mapA.IsEmpty))
+                //|| 
+                 ((img.IsEmpty) && not (mapA'.IsEmpty)) && (not (img'.IsEmpty) && (mapA.IsEmpty))
+                )
+        |> List.map ( fun ((mapP,img',mapA),(imgP,img,mapA')) -> let year = Regex.Match(mapP.InnerText(), yrPattern)
+                                                                 let imgsrc = img.[0].AttributeValue("src")
+                                                                 let latLong = Regex.Match(mapA.[0].Attribute("href").Value(), latlongPattern)
+                                                                 let name = img.[0].AttributeValue("alt")
+                                                                 year,imgsrc,latLong,name
+                    )
+        |> List.filter (fun (yr,img,latlong,name) -> yr.Success && latlong.Success)
+        |> List.map    (fun (yr,img,latlong,name) -> let latlong' = latlong.Value.Split ',' |> Array.map float
+                                                     {Occurred=DateTime(yr.Value |> int,1,1);ImgSrc=img; Lat=latlong'.[0];Long=latlong'.[1];Name=name})
+
+let combinedBanksysByYear = banksysByYear2 @ banksysByYear |> List.distinct |> List.groupBy (fun e -> e.Occurred.Year) |> dict
 
 type MassiveAttackEvents = HtmlProvider<"http://www.bandsintown.com/MassiveAttack/past_events?page=10">
 
@@ -153,11 +173,9 @@ let _,mattakGigEvents =
                   |> Observable.start
 let _,banksyEvents =
     timer.Elapsed |> Observable.scan (fun count _ -> count + 1) 0 
-                  |> Observable.map  (fun i -> printfn "%A" i
-                                               let year = (mattaks.[i % mattaks.Length]).Occurred.Year
-                                               let yearBanksys = match banksysByYear.TryGetValue year with
+                  |> Observable.map  (fun i -> let year = (mattaks.[i % mattaks.Length]).Occurred.Year
+                                               let yearBanksys = match combinedBanksysByYear.TryGetValue year with
                                                                  |true,bs->
-                                                                       printfn "%A" bs
                                                                        bs |> List.map (fun event ->
                                                                                JsonTypes.SocketMapEvent(event.Lat  |> decimal, 
                                                                                                         event.Long |> decimal,

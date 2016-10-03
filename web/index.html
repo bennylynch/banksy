@@ -77,7 +77,7 @@
       var res = JSON.parse(evt.data);
       res.radius = 10;
       res.fillKey = "tweet";
-      $('#yearhdr').text((new Date(res.occurred)).toShortDateString());
+      $('#yearhdr').text((new Date(res.occurred)).toShortDateString() + ' - ' + res.text);
       
       var destination = { latitude: res.latitude, longitude: res.longitude };
       if (map != null) {
