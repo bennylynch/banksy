@@ -1,11 +1,15 @@
-# Is 3D really banksy?
-----------------------
-Using F# to answer one of the most important questions 
-facing humanity today - is 3D, out of popular beat combo Massive Attack, really banksy?
+Is 3D really banksy?
+====================
+##Using F# to answer one of the most important questions facing humanity today - 
+##is 3D, out of popular beat combo Massive Attack, really banksy?
 
-There have been recent suggestions in the press, that the identity of Banksy may in fact be 3D,
-from Bristol brit-hoppers, Massive Attack, based on uncanny coincidences of banksys popping up on walls
-in places where Massive Attack are playing. Some
+There have been recent suggestions in the [press](http://www.independent.co.uk/arts-entertainment/art/news/banksy-identity-theres-a-wild-theory-the-graffiti-artist-is-3d-of-massive-attack-a7222326.html), that the identity of Banksy may in fact be Robert Del Naja,
+aka 3D, based on uncanny coincidences of banksy art-works appearing in places where Massive Attack are playing. 
+
+Some time ago, academics at Queen Mary University, London, used Geoprofiling (in R, no less), to 'prove' that
+the banksy was in fact Robert Gunningham, using the locations of 140 art works in London and Bristol, and locations 
+Gunningham was know to have lived in.
+
 
 Setting things up
 -----------------
@@ -17,7 +21,7 @@ nuget FSharp.Data
 nuget Suave 
 ```
 To download, run '.paket/paketbootstrpper.exe' (which downloads the latest paket.exe, from github), and then '.paket/paket.exe install'.
-Or, if you've cloned the git repo, you can just run build.cmd/sh. This will download the specified dependencies to the 'packages' directory.
+If you've cloned the git repo, you can just run build.cmd/sh. This will download the specified dependencies to the 'packages' directory.
 
 Getting the data
 ----------------
@@ -31,16 +35,24 @@ let data = HtmlTypes.Load("http://someurl.org?page=2")
 ```
 
 Note, that the url/path used as the static type paramter for HtmlProvider need not be the same as the one passed to Load() - as long as the structure
-the HTML is the same. This is a feature we will make use of in getting 
+of the HTML is the same. This is a feature we will make use of in getting data for Massive Attack gigs. I found a very good source for this data
+[here](http://www.bandsintown.com/MassiveAttack/past_events?page=1). This page contains lists of Massive attack gigs in tables, with the below headings
+
 ```html
     <tr>
-          
           <th class="date"><span>Date</span></th>
           <th class="venue"><span>Venue</span></th>
           <th class="location"><span>Location</span></th>
           <th class="more"></th>
     </tr>
-````
+```
+So, to get our list of massive attack gigs, first we define our 'MassiveAttackScraper' type:
+```fsharp
+type MassiveAttackScraper = HtmlProvider<"http://www.bandsintown.com/MassiveAttack/past_events?page=1">
+and if we Load()
+```fsharp
+let dates = MassiveAttackScraper.Load("http://www.bandsintown.com/MassiveAttack/past_events?page=1")
+
 ```html
 <h2>9. Snorting Copper – London</h2>
 <p style="text-align: left;">
