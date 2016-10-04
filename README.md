@@ -116,14 +116,14 @@ let locate (city:string) =
 	...
 ```
 The bing value, will contain an array of matches, with the most confident appearing first, each of which will contain co-ordinates, as a decimal array. The function returns (float * float) option,
-returning None if the API returned no results. The function caches results in a Dictionary<string,(float * float) option>, so that we don't make unnecessary calls.
+returning None if the API returned no results. The function also caches results, so that we don't make unnecessary calls.
 Now we have everythng we need to get a list of Massive Attack gigs, mapped into our Event record type :
 ```fsharp
-//Iterate though 13 pages, mapping the results in to Event record type, getting coords from Bing.
+//Iterate though 13 pages, mapping the results to Event record type, getting coords from Bing.
 //Concat, and sort by Occurred DateTime.
 let mattaks = 
     [for i in 1 ..13 -> //... there are 13 pages
-        let dates = MassiveAttackEvents.Load(sprintf "http://www.bandsintown.com/MassiveAttack/past_events?page=%d" i)
+        let dates = MassiveAttackScraper.Load(sprintf "http://www.bandsintown.com/MassiveAttack/past_events?page=%d" i)
         dates.Tables.``Past Dates``.Rows |> Seq.map (fun r -> 
                         let city = r.Location.Split([|','|]).[0].ToUpper()
                         let lat,long,name = match Bing.locate city with
@@ -133,7 +133,11 @@ let mattaks =
                         |> List.ofSeq
     ] |> List.concat |> List.sortBy (fun e -> e.Occurred)
 ```
+Now, we have gathered a list of 241 Massive Attack gigs, with exact Dates and coordinates, in a few lines ... tremendous. At this point, I was brimming with confidence, thinking I just need to find
+a similar source of data for the list of banksys (of which there's bound to be a wealth, surely?), 20 minutes later, I'll be done ...
 
+But no - try as I might, I could find no decent source data; the best I could find was [here](https://www.canvasartrocks.com/blogs/posts/70529347-121-amazing-banksy-graffiti-artworks-with-locations).
+The page looks agreeable, but could hardly be described as 'structured', the list of entries in one big div, something like: 
 ```html
 <h2>9. Snorting Copper – London</h2>
 <p style="text-align: left;">
@@ -145,3 +149,4 @@ let mattaks =
 <p>This “Snorting Copper” stencil began appearing from 2005 .. 
 	<a href="https://www.google.co.uk/maps/@51.502183,-0.116082,3a,75y,262.82h,76.02t/data=%213m4%211e1%213m2%211sCia574XguUeyJveYbhuGCw%212e0%216m1%211e1" target="_blank">Snorting Copper – approx location (Leake Street)</a>
 </p>```
+No handy Tables, this time ... we can't even rely on each entry being wrapped in a container div, or the like. 
