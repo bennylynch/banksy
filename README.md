@@ -52,7 +52,41 @@ type MassiveAttackScraper = HtmlProvider<"http://www.bandsintown.com/MassiveAtta
 and if we Load()
 ```fsharp
 let dates = MassiveAttackScraper.Load("http://www.bandsintown.com/MassiveAttack/past_events?page=1")
+```
+we get a value with a property Tables, one of which is 'Past Dates', containing an Array of 'Row's
+```fsharp
+Rows = [|(11-Nov-09 12:00:00 AM, "Le Zénith", "Paris, France Le Zénith",
+               "I Was There");
+              (10-Nov-09 12:00:00 AM, "Le Zénith", "Paris, France Le Zénith",
+               "I Was There");
+              (08-Nov-09 12:00:00 AM, "Zoppas Arena",
+               "San Vendemiano, Italy Zoppas Arena", "I Was There");
+              (07-Nov-09 12:00:00 AM, "Palasharp", "Milano, Italy Palasharp",
+               "I Was There"); ....
 
+val it : HtmlProvider<...>.PastDates.Row =
+  (11-Nov-09 12:00:00 AM {Date = 11-Nov-09 12:00:00 AM;
+                          Day = 11;
+                          DayOfWeek = Wednesday;
+                          DayOfYear = 315;
+                          Hour = 0;
+                          Kind = Local;
+                          Millisecond = 0;
+                          Minute = 0;
+                          Month = 11;
+                          Second = 0;
+                          Ticks = 633934944000000000L;
+                          TimeOfDay = 00:00:00;
+                          Year = 2009;}, "Le Zénith",
+   "Paris, France Le Zénith", "I Was There")
+```
+Each Row has properties Date, Location, Column4 and Venue (based on the header rows - the 4th column doesn't have a heading, hence the cryptic name).
+What's more, the Date property has been inferrerd to be a DateTime! This is going to be so easy, I'm almost ashamed ...
+
+Next on the agenda, we should edfine a type to model our domain
+
+
+ 
 ```html
 <h2>9. Snorting Copper – London</h2>
 <p style="text-align: left;">

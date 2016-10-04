@@ -86,8 +86,6 @@ let banksysByYear =
 let banksysByYear2 = 
     [ for i in 1 .. 2 .. els.Length - 2 -> els.[i], els.[i + 1] ]
         |> List.filter (fun ((imgP,img,mapA'),(mapP,img',mapA)) -> 
-                //(not (img.IsEmpty) && (mapA'.IsEmpty)) && ((img'.IsEmpty) && not (mapA.IsEmpty))
-                //|| 
                  ((img.IsEmpty) && not (mapA'.IsEmpty)) && (not (img'.IsEmpty) && (mapA.IsEmpty))
                 )
         |> List.map ( fun ((mapP,img',mapA),(imgP,img,mapA')) -> let year = Regex.Match(mapP.InnerText(), yrPattern)

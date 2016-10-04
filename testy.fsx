@@ -55,7 +55,7 @@ let (|ImgPFollowedByMapP|_|) (a : HtmlNode * HtmlNode list * HtmlNode list, b: H
 let (|MapPFollowedByImgP|_|) (a : HtmlNode * HtmlNode list * HtmlNode list, b: HtmlNode * HtmlNode list * HtmlNode list) =
     try
         match (a,b) with
-        |(mapP,img',mapA),(imgP,img,mapA')  
+        |(imgP,img,mapA'),(mapP,img',mapA)
             when ( ( (img.IsEmpty) && not (mapA'.IsEmpty) ) && ( not (img'.IsEmpty) && (mapA.IsEmpty) ) ) ->
                 let year = Regex.Match(mapP.InnerText(), yrPattern)
                 let imgsrc = img.[0].AttributeValue("src")
@@ -67,16 +67,22 @@ let (|MapPFollowedByImgP|_|) (a : HtmlNode * HtmlNode list * HtmlNode list, b: H
     |_ -> None
 
 let banksysByYear = 
-    [ for i in 1 .. 2 .. els.Length - 2 ->  printfn "%d" i ; els.[i], els.[i + 1]]
+    [ for i in 1 .. 2 .. els.Length - 2 -> els.[i], els.[i + 1]]
         |> List.map (fun (a,b) -> match (a,b) with
-                                  |ImgPFollowedByMapP (yr,img,latlong,name) -> Some(yr,img,latlong,name)
-                                  |MapPFollowedByImgP (yr,img,latlong,name) -> Some(yr,img,latlong,name)
+                                  |MapPFollowedByImgP (yr,img,latlong,name) -> 
+                                        printfn "2nd match"
+                                        Some(yr,img,latlong,name)
+                                  |ImgPFollowedByMapP (yr,img,latlong,name) -> 
+                                        printfn "1st match"
+                                        Some(yr,img,latlong,name)
+
                                   |_                                        -> None)
         |> List.filter (fun a -> a.IsSome) |> List.map (fun a -> a.Value)
         |> List.filter (fun (yr,img,latlong,name) -> yr.Success && latlong.Success)
         |> List.map    (fun (yr,img,latlong,name) -> let latlong' = latlong.Value.Split ',' |> Array.map float
                                                      {Occurred=DateTime(yr.Value |> int,1,1);ImgSrc=img; Lat=latlong'.[0];Long=latlong'.[1];Name=name})
 
+(*
 let banksysByYear2 = 
     [ for i in 1 .. 2 .. els.Length - 2 -> els.[i], els.[i + 1] ]
         |> List.filter (fun ((imgP,img,mapA'),(mapP,img',mapA)) -> 
@@ -92,3 +98,4 @@ let banksysByYear2 =
                                                      {Occurred=DateTime(yr.Value |> int,1,1);ImgSrc=img; Lat=latlong'.[0];Long=latlong'.[1];Name=name})
 
 let combinedBanksysByYear = banksysByYear2 @ banksysByYear |> List.distinct |> List.groupBy (fun e -> e.Occurred.Year) |> dict
+*)
