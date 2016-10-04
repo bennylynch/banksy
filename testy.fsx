@@ -103,3 +103,21 @@ let combinedBanksysByYear = banksysByYear2 @ banksysByYear |> List.distinct |> L
 type MassiveAttackEvents = HtmlProvider<"http://www.bandsintown.com/MassiveAttack/past_events?page=10">
 let dates = MassiveAttackEvents.Load("http://www.bandsintown.com/MassiveAttack/past_events?page=10")
 dates.Tables.``Past Dates``.Rows.[0].
+
+let [<Literal>] BingSample = "http://dev.virtualearth.net/REST/v1/Locations?query=Prague&includeNeighborhood=1&maxResults=5&key=" + Config.BingKey  
+type Bing = JsonProvider<BingSample>
+let url = sprintf "http://dev.virtualearth.net/REST/v1/Locations?query=%s&includeNeighborhood=1&maxResults=5&key=%s" 
+                (HttpUtility.UrlEncode "London")  Config.BingKey
+let bing = Bing.Load(url)
+bing.ResourceSets.[0].Resources.[0].Point.Coordinates
+//          bing.ResourceSets
+//            |> Seq.collect (fun r -> r.Resources)
+//            |> Seq.choose (fun r -> 
+//                match r.Point.Coordinates with
+//                | [| lat; lng |] -> cache.Add(city.ToUpper(), Some(float lat,float lng))
+//                                    Some(float lat, float lng)
+//                | _ -> None)
+//            |> Seq.tryFind (fun _ -> true)
+//        with e -> 
+//          printfn "[ERROR] Bing failed: %A" e
+//          None 

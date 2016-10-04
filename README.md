@@ -100,8 +100,22 @@ The api takes a url of the form
 ```javascript
  http://dev.virtualearth.net/REST/v1/Locations?query=[city]&includeNeighborhood=1&maxResults=5&key=[bing_maps_key], and returns 
 ```
-
- 
+returning some complicated Json. I won't go into too much of the detail of the function (stolen almost entirely from [@tpetricek](https://github.com/tpetricek/new-year-tweets-2016/blob/master/app.fsx#L104)),
+but essentially create the Bing JsonProvider type, with an example url
+```fsharp
+  let [<Literal>] BingSample = "http://dev.virtualearth.net/REST/v1/Locations?query=Prague&includeNeighborhood=1&maxResults=5&key=" + Config.BingKey  
+  type Bing = JsonProvider<BingSample>
+```
+then, a function taking a parameter for the city of interest, build the url, and Load()
+```fsharp
+let locate (city:string) = 
+    let url = 
+    sprintf "http://dev.virtualearth.net/REST/v1/Locations?query=%s&includeNeighborhood=1&maxResults=5&key=%s" 
+        (HttpUtility.UrlEncode city)  Config.BingKey
+    let bing = Bing.Load(url)
+```
+The bing value, will contain an array of matches, with the most confident appearing first, each of which will contain co-ordinates, as a decimal array[2]. The function returns (float * float) option,
+returning None, if the API returned no results. The function also caches results in a Dictionary<string,(float * float) option>, so that we don't make unnecessary calls.
 ```html
 <h2>9. Snorting Copper – London</h2>
 <p style="text-align: left;">
