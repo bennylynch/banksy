@@ -66,6 +66,51 @@ let els = a.Html.CssSelect(".blog_c").[0].Descendants("P")
             |> List.ofSeq
             |> List.filter (fun (a,b,c) -> (b.IsEmpty && c.IsEmpty) |> not)
 
+let (|ImgPFollowedByMapP|_|) (a : HtmlNode * HtmlNode list * HtmlNode list, b: HtmlNode * HtmlNode list * HtmlNode list) =
+    try
+        match (a,b) with
+        |(imgP,img,mapA'),(mapP,img',mapA) 
+            when ((not (img.IsEmpty) && (mapA'.IsEmpty)) && ((img'.IsEmpty) && not (mapA.IsEmpty))) -> 
+                let year = Regex.Match(mapP.InnerText(), yrPattern)
+                let imgsrc = img.[0].AttributeValue("src")
+                let latLong = Regex.Match(mapA.[0].Attribute("href").Value(), latlongPattern)
+                let name = img.[0].AttributeValue("alt")
+                Some (year,imgsrc,latLong,name)
+        |_ -> None
+    with
+    |_ -> None
+
+let (|MapPFollowedByImgP|_|) (a : HtmlNode * HtmlNode list * HtmlNode list, b: HtmlNode * HtmlNode list * HtmlNode list) =
+    try
+        match (a,b) with
+        |(mapP,img',mapA),(imgP,img,mapA')
+            //when ( ( (img.IsEmpty) && not (mapA'.IsEmpty) ) && ( not (img'.IsEmpty) && (mapA.IsEmpty) ) ) ->
+                when ((not (img.IsEmpty) && (mapA'.IsEmpty)) && ((img'.IsEmpty) && not (mapA.IsEmpty))) -> 
+                let year = Regex.Match(mapP.InnerText(), yrPattern)
+                let imgsrc = img.[0].AttributeValue("src")
+                let latLong = Regex.Match(mapA.[0].Attribute("href").Value(), latlongPattern)
+                let name = img.[0].AttributeValue("alt")
+                Some (year,imgsrc,latLong,name)
+        |_ -> None
+    with
+    |_ -> None
+
+let banksysByYear = 
+    [ for i in 1 .. 2 .. els.Length - 2 -> els.[i], els.[i + 1]]
+        |> List.map (fun (a,b) -> match (a,b) with
+                                  |MapPFollowedByImgP (yr,img,latlong,name) -> 
+                                        printfn "2nd match"
+                                        Some(yr,img,latlong,name)
+                                  |ImgPFollowedByMapP (yr,img,latlong,name) -> 
+                                        printfn "1st match"
+                                        Some(yr,img,latlong,name)
+
+                                  |_                                        -> None)
+        |> List.filter (fun a -> a.IsSome) |> List.map (fun a -> a.Value)
+        |> List.filter (fun (yr,img,latlong,name) -> yr.Success && latlong.Success)
+        |> List.map    (fun (yr,img,latlong,name) -> let latlong' = latlong.Value.Split ',' |> Array.map float
+                                                     {Occurred=DateTime(yr.Value |> int,1,1);ImgSrc=img; Lat=latlong'.[0];Long=latlong'.[1];Name=name})
+
 let banksysByYear = 
     [ for i in 1 .. 2 .. els.Length - 2 -> els.[i], els.[i + 1] ]
         |> List.filter (fun ((imgP,img,mapA'),(mapP,img',mapA)) -> 
@@ -80,26 +125,11 @@ let banksysByYear =
         |> List.filter (fun (yr,img,latlong,name) -> yr.Success && latlong.Success)
         |> List.map    (fun (yr,img,latlong,name) -> let latlong' = latlong.Value.Split ',' |> Array.map float
                                                      {Occurred=DateTime(yr.Value |> int,1,1);ImgSrc=img; Lat=latlong'.[0];Long=latlong'.[1];Name=name})
-        //|> List.groupBy (fun e -> e.Occurred.Year) |> dict
-let banksysByYear2 = 
-    [ for i in 1 .. 2 .. els.Length - 2 -> els.[i], els.[i + 1] ]
-        |> List.filter (fun ((imgP,img,mapA'),(mapP,img',mapA)) -> 
-                            ((img.IsEmpty) && not (mapA'.IsEmpty)) && (not (img'.IsEmpty) && (mapA.IsEmpty))
-                       )
-        |> List.map ( fun ((mapP,img',mapA),(imgP,img,mapA')) -> let year = Regex.Match(mapP.InnerText(), yrPattern)
-                                                                 let imgsrc = img.[0].AttributeValue("src")
-                                                                 let latLong = Regex.Match(mapA.[0].Attribute("href").Value(), latlongPattern)
-                                                                 let name = img.[0].AttributeValue("alt")
-                                                                 year,imgsrc,latLong,name
-                    )
-        |> List.filter (fun (yr,img,latlong,name) -> yr.Success && latlong.Success)
-        |> List.map    (fun (yr,img,latlong,name) -> let latlong' = latlong.Value.Split ',' |> Array.map float
-                                                     {Occurred=DateTime(yr.Value |> int,1,1);ImgSrc=img; Lat=latlong'.[0];Long=latlong'.[1];Name=name})
-
-let combinedBanksysByYear = banksysByYear2 @ banksysByYear |> List.distinct |> List.groupBy (fun e -> e.Occurred.Year) |> dict
-
+        |> List.groupBy (fun e -> e.Occurred.Year) |> dict
 type MassiveAttackEvents = HtmlProvider<"http://www.bandsintown.com/MassiveAttack/past_events?page=10">
 
+//Iterate though 13 pages, mapping the results in to Event record type, getting coords from Bing.
+//Concat, and sort by Occurred DateTime.
 let mattaks = 
     [for i in 1 ..13 ->
         let dates = MassiveAttackEvents.Load(sprintf "http://www.bandsintown.com/MassiveAttack/past_events?page=%d" i)
@@ -158,7 +188,7 @@ type JsonTypes = JsonProvider<"""{
 let eventStream =
     timer.Elapsed |> Observable.scan (fun count _ -> count + 1) 0 //count will increment with each Elapsed event
                   |> Observable.map  (fun i -> let event = mattaks.[i % mattaks.Length]
-                                               let yearBanksys = match combinedBanksysByYear.TryGetValue event.Occurred.Year with
+                                               let yearBanksys = match banksysByYear.TryGetValue event.Occurred.Year with
                                                                  |true,bs->
                                                                        bs |> List.map (fun event ->
                                                                                JsonTypes.SocketMapEvent(event.Lat  |> decimal, 
