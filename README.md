@@ -191,7 +191,7 @@ If both of the lists are empty, we discard. The list will look something like
 ... with an item containing the IMG tag list as the 2nd member of the tuple, immediately followed by an item with the list of google map links as the 3rd tuple member, and the blurb P (containing the year) as the first.
 We can iterate through the list 2 at a time, extracting the year and cooridnates with Regular expressions, the name from the alt attribute of the img, and the url to the image from the src attribute (I know, I know this is far from pretty,
 but at this point, it was getting quite late...). Disappointingly, having done this, out of a potential max of 121, we end up with 22 (having filtered out elements where something is missing). The reason, in part, is because the P elements are sometimes in a different order,
-with the google maps P appearing before the img P. This is what I ended up with ...
+with the google maps P appearing before the img P. Having accounted for this, this is what I ended up with ...
 ```fsharp
 let banksysByYear = 
     [ for i in 1 .. 2 .. els.Length - 2 -> els.[i], els.[i + 1]]
