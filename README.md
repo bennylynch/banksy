@@ -80,11 +80,26 @@ val it : HtmlProvider<...>.PastDates.Row =
                           Year = 2009;}, "Le Zénith",
    "Paris, France Le Zénith", "I Was There")
 ```
-Each Row has properties Date, Location, Column4 and Venue (based on the header rows - the 4th column doesn't have a heading, hence the cryptic name).
+Each Row has properties Date, Venue, Location and Column4 (based on the header rows - the 4th column has no heading).
 What's more, the Date property has been inferrerd to be a DateTime! This is going to be so easy, I'm almost ashamed ...
 
-Next on the agenda, we should edfine a type to model our domain
-
+Next on the agenda, we should define a type to model our domain - no need to go over board, something like
+```fsharp
+//type to model things happening somewhere, at some time.
+type Event =
+    { Occurred : DateTime
+      Name : string
+      Lat : float
+      Long : float 
+      ImgSrc : string
+    }
+```
+The purpose of ImgSrc will become apparent. The location column is consistently in the form 'City, Country' - from this, we need to get 
+the latitude and longitude. To do so, we will use (yes) another type provider, this time FSharp.Data.JsonProvider, talking to the Bing Maps rest API.
+The api takes a url of the form
+```javascript
+ http://dev.virtualearth.net/REST/v1/Locations?query=[city]&includeNeighborhood=1&maxResults=5&key=[bing_maps_key], and returns 
+```
 
  
 ```html

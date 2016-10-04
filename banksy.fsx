@@ -69,10 +69,8 @@ let els = a.Html.CssSelect(".blog_c").[0].Descendants("P")
 let banksysByYear = 
     [ for i in 1 .. 2 .. els.Length - 2 -> els.[i], els.[i + 1] ]
         |> List.filter (fun ((imgP,img,mapA'),(mapP,img',mapA)) -> 
-                (not (img.IsEmpty) && (mapA'.IsEmpty)) && ((img'.IsEmpty) && not (mapA.IsEmpty))
-                //|| 
-                // ((img.IsEmpty) && not (mapA'.IsEmpty)) && (not (img'.IsEmpty) && (mapA.IsEmpty))
-                )
+                            (not (img.IsEmpty) && (mapA'.IsEmpty)) && (img'.IsEmpty && not (mapA.IsEmpty))
+                       )
         |> List.map ( fun ((imgP,img,mapA'),(mapP,img',mapA)) -> let year = Regex.Match(mapP.InnerText(), yrPattern)
                                                                  let imgsrc = img.[0].AttributeValue("src")
                                                                  let latLong = Regex.Match(mapA.[0].Attribute("href").Value(), latlongPattern)
@@ -86,8 +84,8 @@ let banksysByYear =
 let banksysByYear2 = 
     [ for i in 1 .. 2 .. els.Length - 2 -> els.[i], els.[i + 1] ]
         |> List.filter (fun ((imgP,img,mapA'),(mapP,img',mapA)) -> 
-                 ((img.IsEmpty) && not (mapA'.IsEmpty)) && (not (img'.IsEmpty) && (mapA.IsEmpty))
-                )
+                            ((img.IsEmpty) && not (mapA'.IsEmpty)) && (not (img'.IsEmpty) && (mapA.IsEmpty))
+                       )
         |> List.map ( fun ((mapP,img',mapA),(imgP,img,mapA')) -> let year = Regex.Match(mapP.InnerText(), yrPattern)
                                                                  let imgsrc = img.[0].AttributeValue("src")
                                                                  let latLong = Regex.Match(mapA.[0].Attribute("href").Value(), latlongPattern)
@@ -158,9 +156,8 @@ type JsonTypes = JsonProvider<"""{
   }""">
 
 let eventStream =
-    timer.Elapsed |> Observable.scan (fun count _ -> count + 1) 0 
-                  |> Observable.map  (fun i -> printfn "%A" i
-                                               let event = mattaks.[i % mattaks.Length]
+    timer.Elapsed |> Observable.scan (fun count _ -> count + 1) 0 //count will increment with each Elapsed event
+                  |> Observable.map  (fun i -> let event = mattaks.[i % mattaks.Length]
                                                let yearBanksys = match combinedBanksysByYear.TryGetValue event.Occurred.Year with
                                                                  |true,bs->
                                                                        bs |> List.map (fun event ->
@@ -179,6 +176,7 @@ let eventStream =
                                                                         "3d").JsonValue.ToString()
                                                ,JsonValue.Array(yearBanksys).ToString()
                                      )
+//split the combined stream Observable<string,string> into 2
 let _,mattakGigEvents = eventStream |> Observable.map (fun (m,b) -> m)  |> Observable.start
 let _,banksyEvents    = eventStream |> Observable.map (fun (m,b) -> b ) |> Observable.start
 

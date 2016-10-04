@@ -99,3 +99,7 @@ let banksysByYear2 =
 
 let combinedBanksysByYear = banksysByYear2 @ banksysByYear |> List.distinct |> List.groupBy (fun e -> e.Occurred.Year) |> dict
 *)
+
+type MassiveAttackEvents = HtmlProvider<"http://www.bandsintown.com/MassiveAttack/past_events?page=10">
+let dates = MassiveAttackEvents.Load("http://www.bandsintown.com/MassiveAttack/past_events?page=10")
+dates.Tables.``Past Dates``.Rows.[0].
