@@ -146,7 +146,48 @@ The page looks agreeable, but could hardly be described as 'structured', the lis
 <p>(Image credit: 
 	<a href="http://www.banksyunmasked.co.uk/" rel="nofollow">Banksy Unmasked</a>)
 </p>
-<p>This “Snorting Copper” stencil began appearing from 2005 .. 
+<p>This “Snorting Copper” stencil began appearing from 2005 .. [ .. blurb .. blurb .. ]
 	<a href="https://www.google.co.uk/maps/@51.502183,-0.116082,3a,75y,262.82h,76.02t/data=%213m4%211e1%213m2%211sCia574XguUeyJveYbhuGCw%212e0%216m1%211e1" target="_blank">Snorting Copper – approx location (Leake Street)</a>
-</p>```
-No handy Tables, this time ... we can't even rely on each entry being wrapped in a container div, or the like. 
+</p>
+```
+No handy Tables, this time ... we can't even rely on each entry being wrapped in a container div, or the like. On the plus side, most of the entries have a link to google maps, that contain
+co-ordinates. On the minus side, the nearest thing to a date is in the 'blurb' P, where it may or may not indicate the year in which the work appeared. To get some meaningful data out of this, is
+going to require a bit more work...
+
+So ... we can get the url for the image from the img element, the year from the 'blurb' paragraph, and the lat/long from the google maps href. 
+The HtmlProvider exposes some 'DOM' style functions, such as Descendants (accepts an element name parameter), and CssSelect ( which accepts jQuery style selectors). The first we can do, is fish out
+the P elements, inside the main <div class="blog_c">
+```fsharp
+let els = a.Html.CssSelect(".blog_c").[0].Descendants("P")
+```
+We're only really interested in some of these elements though; those with the nested IMG element, and those with the google maps link. We can filter out these with some CssSelect, and filtering.
+```fsharp
+	        |> Seq.map (fun el -> el, el.CssSelect("img"), el.CssSelect("a[target='_blank'][href*='maps']"))
+            |> List.ofSeq
+            |> List.filter (fun (a,b,c) -> (b.IsEmpty && c.IsEmpty) |> not)
+```
+
+This gives us a list of (HtmlNode * HtmlNode list * HtmlNode list) tuples, the original P element (from which we hope to get the year), a list of nested img tags (if any), and a list of the nested google links (if any).
+If both of the lists are empty, we discard. The list will look something like
+
+```fsharp
+[(
+    <p style="text-align: left;">
+		<img alt="Banksy Gorilla Artist Shave Kong Graffiti - Leake Street, London" src="https://cdn.shopify.com/s/files/1/1003/7610/files/Banksy-Kong.jpg?2258386193852830659" style="float: none;" />
+	</p>,
+    [<img alt="Banksy Gorilla Artist Shave Kong Graffiti - Leake Street, London" src="https://cdn.shopify.com/s/files/1/1003/7610/files/Banksy-Kong.jpg?2258386193852830659" style="float: none;" />],
+    []
+);
+(
+	<p>
+		Gorilla Artist or Shave Kong .. was created ... in 2008. The festival ... blurb
+	</p>,
+	[],
+	[<a href="https://www.google.com/maps/./@51.501353,-0.114741..." target="_blank">Shave Kong Location.</a>]
+); .... ]
+```
+With an item containing the IMG tag list as the 2nd member of the tuple, immediately followed by an item with the list of google map links as the 3rd tuple member, and the blurb P (containing the year) as the first.
+We can iterate through the list 2 at a time, extracting the year and cooridnates with Regular expressions, the name from the alt attribute of the img, and the url to the image from the src attribute. 
+Disappointingly, having done this, out of a potential max of 121, we end up with 22, having filtered out elements where something is missing. The reason, in part, is because the P elements are sometimes in a different order,
+with the google maps P appearing before the img P. 
+

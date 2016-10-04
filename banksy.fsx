@@ -97,13 +97,9 @@ let (|MapPFollowedByImgP|_|) (a : HtmlNode * HtmlNode list * HtmlNode list, b: H
 let banksysByYear = 
     [ for i in 1 .. 2 .. els.Length - 2 -> els.[i], els.[i + 1]]
         |> List.map (fun (a,b) -> match (a,b) with
-                                  |MapPFollowedByImgP (yr,img,latlong,name) -> 
-                                        printfn "2nd match"
-                                        Some(yr,img,latlong,name)
+                                  |MapPFollowedByImgP (yr,img,latlong,name)
                                   |ImgPFollowedByMapP (yr,img,latlong,name) -> 
-                                        printfn "1st match"
                                         Some(yr,img,latlong,name)
-
                                   |_                                        -> None)
         |> List.filter (fun a -> a.IsSome) |> List.map (fun a -> a.Value)
         |> List.filter (fun (yr,img,latlong,name) -> yr.Success && latlong.Success)
@@ -129,7 +125,7 @@ let mattaks =
 
 //Suave bits
 
-let timer = new Timers.Timer(interval = 500. , Enabled=true)
+let timer = new Timers.Timer(interval = 1000. , Enabled=true)
 // Cached version of: https://en.wikipedia.org/wiki/List_of_time_zones_by_country
 type TimeZones = HtmlProvider<"data/List_of_time_zones_by_country.html">
 let reg = System.Text.RegularExpressions.Regex("""UTC([\+\-][0-9][0-9]\:[0-9][0-9])?""")
