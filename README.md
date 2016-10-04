@@ -206,14 +206,14 @@ let banksysByYear =
                                                      {Occurred=DateTime(yr.Value |> int,1,1);ImgSrc=img; Lat=latlong'.[0];Long=latlong'.[1];Name=name})
         |> List.groupBy (fun e -> e.Occurred.Year) |> dict
 ```
-... using 2 active patterns to deal with the issue of the 2 different orderings of the elements, both of them returning an option of the data we are intersted in, plucked out
+... using 2 active patterns (MapPFollowedByImgP & ImgPFollowedByMapP) to deal with the issue of the 2 different orderings of the elements, both of them returning option tules of the data we are intersted in, plucked out
 using a combintion of Regex matches, and AttrubuteValue(_). Items lacking a match for the year or the latlong pattern, are filtered out (they'd be no use, really), the remainder
-mapped into Event records, the list grouped by Occured.Year, which is piped into dict keyed on Year. We end up with 41, a modest improvement...  
+mapped into Event records, grouped by Occured.Year, finally piped into a dict, keyed on Year. We end up with 41, a modest improvement...  
 
-At this point, hope of a rigorous statistical analysis is waning fast ... but we can use the gathered data for a data-viz, which may be enlightening. Which is where
+At this point, hope of any rigorous statistical analysis is waning fast ... but we can still use the gathered data for a data-viz, which may still be enlightening. Which is where
 Suave comes in. 
 
-I'm sure many of you were impressed with [Tomas Petricek's #FsAdvent entry this year](http://tomasp.net/blog/2015/happy-new-year-tweets/), a Suave based website, streaming new year tweets to the browser via Websockets, and displaying them
-on a map; I know I was. So, I thought I would do a data-viz (*ahem*) influenced on this project (ie. pilfer it hook line and sinker). Much of the suave side of things is practically identical to the original project, so I won't go into detail
+I'm sure many of you were impressed with [Tomas Petricek's #FsAdvent entry this year](http://tomasp.net/blog/2015/happy-new-year-tweets/), a Suave based webs app, streaming new year geo-loacted tweets via Websockets, and displaying them
+on a (datampas) map; I know I was. So, I thought I would do a data-viz influenced (\*ahem\*) on this project (ie. pilfer it hook line and sinker). Much of the suave side of things is practically identical to the original project, so I won't go into detail
 of these aspects, but would encourage you to check out Tomas's blog post. In essence, we are going to expose 2 websockets, the first sending a stream of Massive attack gigs in Json, ordered ascending by date, the second sending an array of
 Json banksys in the same year. Time for another type provider, the JsonProvider, again in FSharp.Data.
