@@ -210,9 +210,10 @@ let banksysByYear =
 using a combintion of Regex matches, and AttrubuteValue(_). Items lacking a match for the year or the latlong pattern, are filtered out (they'd be no use, really), the remainder
 mapped into Event records, the list grouped by Occured.Year, which is piped into dict keyed on Year. We end up with 41, a modest improvement...  
 
-At this point, hope of a rigorous statistical analysis is waning fast .... but we can use the data we have gathered for a data-viz, which may be enlightening. Which is where
+At this point, hope of a rigorous statistical analysis is waning fast ... but we can use the gathered data for a data-viz, which may be enlightening. Which is where
 Suave comes in. 
 
 I'm sure many of you were impressed with [Tomas Petricek's #FsAdvent entry this year](http://tomasp.net/blog/2015/happy-new-year-tweets/), a Suave based website, streaming new year tweets to the browser via Websockets, and displaying them
 on a map; I know I was. So, I thought I would do a data-viz (*ahem*) influenced on this project (ie. pilfer it hook line and sinker). Much of the suave side of things is practically identical to the original project, so I won't go into detail
-of these aspects, but would encourage you to check out Tomas's blog post. 
+of these aspects, but would encourage you to check out Tomas's blog post. In essence, we are going to expose 2 websockets, the first sending a stream of Massive attack gigs in Json, ordered ascending by date, the second sending an array of
+Json banksys in the same year. Time for another type provider, the JsonProvider, again in FSharp.Data.
