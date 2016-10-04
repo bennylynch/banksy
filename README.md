@@ -6,8 +6,8 @@ Is 3D really banksy?
 There have been recent suggestions in the [press](http://www.independent.co.uk/arts-entertainment/art/news/banksy-identity-theres-a-wild-theory-the-graffiti-artist-is-3d-of-massive-attack-a7222326.html), that the identity of Banksy may in fact be Robert Del Naja,
 aka 3D, based on uncanny coincidences of banksy art-works appearing in places where Massive Attack are playing. 
 
-Some time ago, academics at Queen Mary University, London, used Geoprofiling (in R, no less), to 'prove' that
-the banksy was in fact Robert Gunningham, using the locations of 140 art works in London and Bristol, and locations 
+Earlier this year, academics at Queen Mary University, London, used Geoprofiling (in R, no less), to ['prove' that
+the banksy was in fact Robert Gunningham] (http://www.independent.co.uk/news/people/banksy-geographic-profiling-proves-artist-really-is-robin-gunningham-according-to-scientists-a6909896.html), using the locations of 140 art works in London and Bristol, and locations 
 Gunningham was known to have lived in. I thought this latest claim could be investigated using a similar approach, with F# &
 type providers.
 
@@ -85,7 +85,7 @@ val it : HtmlProvider<...>.PastDates.Row =
 Each Row has properties Date, Venue, Location and Column4 (based on the header rows - the 4th column has no heading).
 What's more, the Date property has been inferrerd to be a DateTime! This is going to be so easy, I'm almost ashamed ...
 
-Next on the agenda, we should define a type to model our domain - no need to go over board, something like
+Next on the agenda, we should define a type to model our domain - no need to go over board, something like ...
 ```fsharp
 //type to model things happening somewhere, at some time.
 type Event =
@@ -96,13 +96,13 @@ type Event =
       ImgSrc : string
     }
 ```
-The purpose of ImgSrc will become apparent. The location column is consistently in the form 'City, Country' - from this, we need to get 
-the latitude and longitude. To do so, we will use (what else?) another type provider, this time FSharp.Data.JsonProvider, talking to the Bing Maps rest API.
+... wil suffice. The purpose of ImgSrc will become apparent. The location column is consistently in the form 'City, Country' - from this, we need to get 
+the latitude and longitude. To do this, we will use (what else?) another type provider, this time FSharp.Data.JsonProvider, talking to the Bing Maps rest API.
 The api takes a url of the form
 ```javascript
  http://dev.virtualearth.net/REST/v1/Locations?query=[city]&includeNeighborhood=1&maxResults=5&key=[bing_maps_key], and returns 
 ```
-returning some complicated Json. I won't go into too much of the detail of the function (stolen almost entirely from @tpetricek [here](https://github.com/tpetricek/new-year-tweets-2016/blob/master/app.fsx#L104)),
+returning some complicated Json. I won't go into too much of the detail of the function (stolen entirely from @tpetricek [here](https://github.com/tpetricek/new-year-tweets-2016/blob/master/app.fsx#L104)),
 but essentially, we create the Bing JsonProvider type, with an example url
 ```fsharp
   let [<Literal>] BingSample = "http://dev.virtualearth.net/REST/v1/Locations?query=Prague&includeNeighborhood=1&maxResults=5&key=" + Config.BingKey  
@@ -157,8 +157,8 @@ co-ordinates. On the minus side, the nearest thing to a date is in the 'blurb' P
 going to require a bit more work...
 
 So ... we can get the url for the image from the img element, the year from the 'blurb' paragraph, and the lat/long from the google maps href. 
-The HtmlProvider exposes some 'DOM' style functions, such as Descendants (accepts an element name parameter), and CssSelect ( which accepts jQuery style selectors). The first thing to do, is fish out
-the P elements, inside the main <div class="blog_c">
+The HtmlProvider exposes some 'DOM' style functions, such as Descendants (accepts an element name parameter), and CssSelect ( which accepts jQuery style selectors). The first thing to do, then, is fish out
+the P elements, inside the main \<div class="blog_c"\>
 ```fsharp
 let els = a.Html.CssSelect(".blog_c").[0].Descendants("P")
 ```
