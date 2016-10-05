@@ -99,7 +99,7 @@
           var res = JSON.parse(evt.data);
           $("#banksys li").remove();
           res.forEach(function (banksy) {
-              banksy.radius = 10; banksy.fillKey = "tweet"
+              banksy.radius = 10; banksy.fillKey = "banksy"
               var li = $("<li/>");
               var p = $("<p>" + banksy.text + "</p>");
               li.append($("<img src='" + banksy.picture + "'/>"));
@@ -137,7 +137,7 @@
           // Create fills object with color for each time zone
           var fills = {
               defaultFill: '#EDDC4E',
-              tweet: 'blue'//'#f0027f'
+              banksy: 'blue'
           }
           var colors = ['#7fc97f', '#beaed4', '#fdc086', '#ffff99'];
           var index = -1;
@@ -148,6 +148,7 @@
 
           // Create the data map!
           map = new Datamap({
+              projection: 'mercator',
               element: document.getElementById('map'),
               scope: 'world',
               geographyConfig: {
@@ -157,8 +158,8 @@
               },
               bubblesConfig: {
                   borderWidth: 1,
-                  highlightFillColor: 'blue',//'#FF60B5',
-                  highlightBorderColor: 'black',//'#ffffff',
+                  highlightFillColor: 'blue',
+                  highlightBorderColor: 'black',
                   highlightBorderWidth: 1,
               },
               fills: fills,

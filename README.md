@@ -211,7 +211,7 @@ using a combination of Regex matches, and AttributeValue(_). Items lacking a mat
 mapped into Event records, grouped by Occured.Year, finally piped into a dict, keyed on Year (reasoning to follow). We end up with 41, a modest improvement...  
 
 At this point, without accurate dates, hope of any rigorous statistical analysis is lost ... but we can still use the gathered data for a data-viz, which may still be enlightening. Which is where
-Suave comes in. 
+[Suave](https://suave.io/) comes in. 
 
 I'm sure many of you were impressed with [Tomas Petricek's #FsAdvent entry this year](http://tomasp.net/blog/2015/happy-new-year-tweets/), a Suave based app, streaming geo-located 'new year' tweets via Websockets, displaying them
 on a (datamaps) map; I know I was. So, I thought I would do a data-viz based (\*ahem\*) on this project (i.e. pilfer it hook, line and sinker). Much of the suave side of things is practically identical to the original project, so I won't go into the detail
@@ -286,5 +286,15 @@ let _, run = startWebServerAsync config webPart
 let ct = new System.Threading.CancellationTokenSource()
 Async.Start(run, ct.Token)
 ```
-
+I'll just give a brief overview of what goes on in the browser - this is not the javascrip gazette, after all. The visualisation is based on a [datamaps map](https://datamaps.github.io/), 
+a jQuery plugin, which takes a configuration object in the constructor, in standard jQuery plugin fashion. The listenToMassiveAttackEvents function connects to the '/mattaks' socket, and for 
+each received message, draws an 'arc' from the lat/long co-ordinates of the current 'event' (i.e gig), to the co-ordinates of the incoming message. The listenToBanksyEvents connects to the 
+'/banksys' socket, deserialises each incoming message into an array of our socketMapEvent objects, appending a span for each, of the image, and the text in a UL in the bottom right. A bubble
+is drawn on the map for each, at the specified co-ordinates, with a 'popup' that appears when you hover over the bubble.
+  
 <img align="right" src="https://github.com/bennylynch/banksy/raw/master/data/demo.gif" alt="demo" />
+
+So, what have we learned? Well, regarding the question weset out to answer, not much (although there are some striking coincidences in 2010). But we have learned that doing this kind of thing
+in F# is tremendous fun, type providers let you get data from many different sources, easily and without ceremony. We have learned that Suave is a beautifuly put together library for creating
+web servers, in a functional, compositional style. And most of all, we have learned that whatever you do in F#, chances are, Tomas Petricek had some hand in it, so buy him a beer when you see 
+him next. 
