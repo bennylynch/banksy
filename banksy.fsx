@@ -216,7 +216,7 @@ let config = { defaultConfig with
                         [ HttpBinding.mk HTTP (System.Net.IPAddress.Parse "0.0.0.0") 8082us ]
              }
 
-let start, run = startWebServerAsync config webPart
+let _, run = startWebServerAsync config webPart
 let ct = new System.Threading.CancellationTokenSource()
 Async.Start(run, ct.Token)
 System.Diagnostics.Process.Start("chrome.exe","http://localhost:8082/index.html")
