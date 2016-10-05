@@ -9,8 +9,9 @@ aka 3D, based on uncanny coincidences of banksy art-works appearing in places wh
 Earlier this year, academics at Queen Mary University, London, used Geoprofiling (in R, no less), to ['prove' that
 banksy was in fact Robert Gunningham] (http://www.independent.co.uk/news/people/banksy-geographic-profiling-proves-artist-really-is-robin-gunningham-according-to-scientists-a6909896.html), using the locations of 140 art works in London and Bristol, and locations 
 Gunningham was known to have lived in. I thought this latest claim could be investigated using a similar approach, with F# &
-type providers.
-
+type providers. To clone the git repo 
+```
+git clone https://github.com/bennylynch/banksy.git
 
 Setting things up
 -----------------
@@ -21,8 +22,7 @@ source https://nuget.org/api/v2
 nuget FSharp.Data
 nuget Suave 
 ```
-To download, run '.paket/paketbootstrapper.exe' (which downloads the latest paket.exe, from github), followed by '.paket/paket.exe install'.
-If you've cloned the git repo, you can just run build.cmd/sh. This will download the specified dependencies to the 'packages' directory.
+To download, run build.cmd/sh. This will download the specified dependencies to the 'packages' directory.
 
 Getting the data
 ----------------
