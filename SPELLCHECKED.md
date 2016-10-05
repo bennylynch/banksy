@@ -100,7 +100,7 @@ type Event =
 the latitude and longitude. To do this, we will use (what else?) another type provider, this time FSharp.Data.JsonProvider, talking to the Bing Maps rest API.
 The api takes a url of the form
 ```javascript
- http://dev.virtualearth.net/REST/v1/Locations?query=[city]&includeNeighborhood=1&maxResults=5&key=[bing_maps_key], and returns 
+ http://dev.virtualearth.net/REST/v1/Locations?query=[city]&includeNeighborhood=1&maxResults=5&key=[bing_maps_key]
 ```
 returning some complicated Json. I won't go into too much of the detail of the function (stolen entirely from @tpetricek [here](https://github.com/tpetricek/new-year-tweets-2016/blob/master/app.fsx#L104)),
 but essentially, we create the Bing JsonProvider type, with an example url
@@ -213,8 +213,8 @@ mapped into Event records, grouped by Occured.Year, finally piped into a dict, k
 At this point, without accurate dates, hope of any rigorous statistical analysis is lost ... but we can still use the gathered data for a data-viz, which may still be enlightening. Which is where
 Suave comes in. 
 
-I'm sure many of you were impressed with [Tomas Petricek's #FsAdvent entry this year](http://tomasp.net/blog/2015/happy-new-year-tweets/), a Suave based webs app, streaming geo-located 'new year' tweets via Websockets, displaying them
-on a (datamaps) map; I know I was. So, I thought I would do a data-viz based (\*ahem\*) on this project (i.e. pilfer it hook, line and sinker). Much of the suave side of things is practically identical to the original project, so I won't go into detail
+I'm sure many of you were impressed with [Tomas Petricek's #FsAdvent entry this year](http://tomasp.net/blog/2015/happy-new-year-tweets/), a Suave based app, streaming geo-located 'new year' tweets via Websockets, displaying them
+on a (datamaps) map; I know I was. So, I thought I would do a data-viz based (\*ahem\*) on this project (i.e. pilfer it hook, line and sinker). Much of the suave side of things is practically identical to the original project, so I won't go into the detail
 of these aspects, but would encourage you to check out Tomas's blog post. In essence, we are going to expose 2 websockets, the first sending a stream of Massive attack gigs in Json, ordered ascending by date, the second sending an array of
 Json banksys in the same year as the gigs.
 
@@ -242,4 +242,34 @@ let eventStream =
                                                                         "3d").JsonValue.ToString()
                                                ,JsonValue.Array(yearBanksys).ToString()
                                      )
-
+```
+To have the events being sent down the sockets periodically in date order, eventStream uses a timer ticking every second. Observable.scan is used
+here to increment a counter with every Elapsed event. The mod of the counter against the length of the list of Massive Attack gigs is used as an index into the list -
+this means that when the counter exceeds the length of the list, it will start agai from the beginning. The year of the current Massive Attack gig is used to retrieve
+the array of Banksys works apearing that year. Each of these are serialised to Json strings (again, using the Json Type provider), which are returned from Observable.map
+as a string * string tuple. Thus, the type of eventStream is IObservable<string * string>. The combined stream is split into 2, thus:
+```fsharp
+///split the combined stream Observable<string,string> into 2
+let _,mattakGigEvents = eventStream |> Observable.map (fun (m,b) -> m)  |> Observable.start
+let _,banksyEvents    = eventStream |> Observable.map (fun (m,b) -> b)  |> Observable.start
+```
+Now, we need to expose these two event streams over our web sockets. This is done via the socketOfObservable function, using Suave's socket {...} computation 
+expression, waiting indefinitely for Observables from the passed in updates. When an Observable is received, it is sent on to the socket.
+```fsharp
+// Passes updates from IObservable<string> to a socket
+let socketOfObservable (updates:IObservable<string>) (webSocket:WebSocket) cx = socket {
+  while true do
+    let! update = updates |> Async.AwaitObservable |> Suave.Sockets.SocketOp.ofAsync
+    do! webSocket.send Text (System.Text.Encoding.UTF8.GetBytes update) true }
+```
+Sauve's workhouse type is WebPart, which is just a type alias for HttpContext -> Async<HttpContext option>. So, WebPart is a function accepting an incoming HttpContext (request),
+and returning a HttpContext option (thus, an 'empty' response can be returned), wrapped in an async workflow. A suave server is started using the startWebServer function,
+which takes arguments of SuaveConfig (an object to configure the server - which port to listen on, &c.) and WebPart. Routing in the world of Sauve is done using the choose function -
+this takes a list of WebPart<_>s, returning (choosing) the first one returning Some (or None ..). 
+let webPart =
+    choose [
+        path "/mattaks" >=> handShake ( socketOfObservable mattakGigEvents )
+        path "/banksys" >=> handShake ( socketOfObservable banksyEvents )
+        path "/zones" >=> Successful.OK timeZonesJson
+        pathRegex "(.*)\.(css|js|html|jpg)" >=> Files.browseHome
+    ]
