@@ -27,3 +27,5 @@ obj/
 *.nupkg
 packages/
 config.fsx
+testy.fsx
+paket.lock
