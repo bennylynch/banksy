@@ -165,7 +165,7 @@ type JsonTypes = JsonProvider<"""{
       { "countries": [ {"country": "UK", "zone": "UTC" }, {"country": "UK", "zone": "UTC" } ],
         "zones": [ "UTC", "UTC+00:00" ] }
   }""">
-
+///Combined stream of IObservable<string * string>, 1st being Massive attack gig, 2nd array of Banksys int he same year.
 let eventStream =
     timer.Elapsed |> Observable.scan (fun count _ -> count + 1) 0 //count will increment with each Elapsed event
                   |> Observable.map  (fun i -> let event = mattaks.[i % mattaks.Length]
@@ -187,7 +187,7 @@ let eventStream =
                                                                         "3d").JsonValue.ToString()
                                                ,JsonValue.Array(yearBanksys).ToString()
                                      )
-//split the combined stream Observable<string,string> into 2
+///split the combined stream Observable<string,string> into 2
 let _,mattakGigEvents = eventStream |> Observable.map (fun (m,b) -> m)  |> Observable.start
 let _,banksyEvents    = eventStream |> Observable.map (fun (m,b) -> b ) |> Observable.start
 
