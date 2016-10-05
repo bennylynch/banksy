@@ -12,7 +12,7 @@ Gunningham was known to have lived in. I thought this latest claim could be inve
 type providers. To clone the git repo 
 ```
 git clone https://github.com/bennylynch/banksy.git
-
+```
 Setting things up
 -----------------
 We're going to use paket for dependency management. We'll be needing FSharp.Data and Suave, so our paket.dependencies
