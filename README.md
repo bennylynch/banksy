@@ -1,9 +1,9 @@
-Is 3D really banksy?
-====================
+Using F# type providers and Suave for data-visualisation
+========================================================
 ##Using F# to answer one of the most important questions facing humanity today - 
 ##is 3D, out of popular beat combo Massive Attack, really banksy?
 
-There have been recent suggestions in the [press](http://www.independent.co.uk/arts-entertainment/art/news/banksy-identity-theres-a-wild-theory-the-graffiti-artist-is-3d-of-massive-attack-a7222326.html), that the identity of Banksy may in fact be Robert Del Naja,
+There have been recent [suggestions in the press](http://www.independent.co.uk/arts-entertainment/art/news/banksy-identity-theres-a-wild-theory-the-graffiti-artist-is-3d-of-massive-attack-a7222326.html), that the identity of Banksy may in fact be Robert Del Naja,
 aka 3D, based on uncanny coincidences of banksy art-works appearing in places where Massive Attack are playing. 
 
 Earlier this year, academics at Queen Mary University, London, used Geoprofiling (in R, no less), to ['prove' that
@@ -212,7 +212,8 @@ mapped into Event records, grouped by Occured.Year, finally piped into a dict, k
 
 At this point, without accurate dates, hope of any rigorous statistical analysis is lost ... but we can still use the gathered data for a data-viz, which may still be enlightening. Which is where
 [Suave](https://suave.io/) comes in. 
-
+The Suave web socket server
+===========================
 I'm sure many of you were impressed with [Tomas Petricek's #FsAdvent entry this year](http://tomasp.net/blog/2015/happy-new-year-tweets/), a Suave based app, streaming geo-located 'new year' tweets via Websockets, displaying them
 on a (datamaps) map; I know I was. So, I thought I would do a data-viz based (\*ahem\*) on this project (i.e. pilfer it hook, line and sinker). Much of the suave side of things is practically identical to the original project, so I won't go into the detail
 of these aspects, but would encourage you to check out Tomas's blog post. In essence, we are going to expose 2 websockets, the first sending a stream of Massive attack gigs in Json, ordered ascending by date, the second sending an array of
@@ -286,6 +287,8 @@ let _, run = startWebServerAsync config webPart
 let ct = new System.Threading.CancellationTokenSource()
 Async.Start(run, ct.Token)
 ```
+The Client
+===========
 I'll just give a brief overview of what goes on in the browser - this is not the javascrip gazette, after all. The visualisation is based on a [datamaps map](https://datamaps.github.io/), 
 a jQuery plugin, which takes a configuration object in the constructor, in standard jQuery plugin fashion. The listenToMassiveAttackEvents function connects to the '/mattaks' socket, and for 
 each received message, draws an 'arc' from the lat/long co-ordinates of the current 'event' (i.e gig), to the co-ordinates of the incoming message. The listenToBanksyEvents connects to the 
