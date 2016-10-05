@@ -265,7 +265,10 @@ let socketOfObservable (updates:IObservable<string>) (webSocket:WebSocket) cx = 
 Sauve's workhouse type is WebPart, which is just a type alias for HttpContext -> Async<HttpContext option>. So, WebPart is a function accepting an incoming HttpContext (request),
 and returning a HttpContext option (thus, an 'empty' response can be returned), wrapped in an async workflow. A suave server is started using the startWebServer function,
 which takes arguments of SuaveConfig (an object to configure the server - which port to listen on, &c.) and WebPart. Routing in the world of Sauve is done using the choose function -
-this takes a list of WebPart<_>s, returning (choosing) the first one returning Some (or None ..). 
+this takes a list of WebPart<_>s, returning (choosing) the first one returning Some (or None ..). The 2 final peices of the puzzle are the path function, which takes a string
+(representing the navigated path) returning a WebPart if the request path matches, and the >=> (fish) operator, which composes 2 WebParts into one, by evaluating the left hand side,
+and applies the right hand side, if the LHS part returns Some. This all sounds fairly involved, but the end result actually looks quite intuitive:
+```fsharp
 let webPart =
     choose [
         path "/mattaks" >=> handShake ( socketOfObservable mattakGigEvents )
@@ -273,3 +276,13 @@ let webPart =
         path "/zones" >=> Successful.OK timeZonesJson
         pathRegex "(.*)\.(css|js|html|jpg)" >=> Files.browseHome
     ]
+```
+Thus, the webPart routing function is exposing 3 explicit paths, the first 2 for the websockets; the handShake function is used to 'capture' the incomming WebScoket request,
+passing it in to the provided conitinuation function. The 3rd path is a normal http get returning some Json used to colour the map in the page (details not shown). The last route
+is used for serving static files - pathRegex is similar to path, but matches the incoming path to a regular expression, as opposed to an explicit path. Thus, any path with one of
+the specified extensions, will be served from the server's homeFolder (if it exists ..). All that is left to do, then, is start the server, using the webPart function as the 'WebPart':
+```fsharp
+let _, run = startWebServerAsync config webPart
+let ct = new System.Threading.CancellationTokenSource()
+Async.Start(run, ct.Token)
+```

@@ -191,7 +191,7 @@ let eventStream =
 let _,mattakGigEvents = eventStream |> Observable.map (fun (m,b) -> m)  |> Observable.start
 let _,banksyEvents    = eventStream |> Observable.map (fun (m,b) -> b ) |> Observable.start
 
-// Passes updates from IObservable<string> to a socket
+/// Passes updates from IObservable<string> to a socket
 let socketOfObservable (updates:IObservable<string>) (webSocket:WebSocket) cx = socket {
   while true do
     let! update = updates |> Async.AwaitObservable |> Suave.Sockets.SocketOp.ofAsync
