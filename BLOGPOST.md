@@ -141,14 +141,14 @@ a similar source of data for the list of banksys (of which there's bound to be a
 But no - try as I might, I could find no decent source for the data; the best I could find was [here](https://www.canvasartrocks.com/blogs/posts/70529347-121-amazing-banksy-graffiti-artworks-with-locations).
 The page looks agreeable, but could hardly be described as 'structured', the list of entries in one big div, something like: 
 ```html
-<h2>9. Snorting Copper – London</h2>
+<h2>9. Snorting Copper - London</h2>
 <p style="text-align: left;">
 	<img alt="Banksy Snorting Copper Policeman Curtain Street Shoreditch London" src="https://cdn.shopify.com/s/files/1/1003/7610/files/Banksy-Snorting-Copper-Photo.jpg?5516731841857925526" style="float: none;">
 </p>
 <p>(Image credit: 
 	<a href="http://www.banksyunmasked.co.uk/" rel="nofollow">Banksy Unmasked</a>)
 </p>
-<p>This “Snorting Copper” stencil began appearing from 2005 .. [ .. blurb .. blurb .. ]
+<p>This "Snorting Copper" stencil began appearing from 2005 .. [ .. blurb .. blurb .. ]
 	<a href="https://www.google.co.uk/maps/@51.502183,-0.116082,3a,75y,262.82h,76.02t/data=%213m4%211e1%213m2%211sCia574XguUeyJveYbhuGCw%212e0%216m1%211e1" target="_blank">Snorting Copper – approx location (Leake Street)</a>
 </p>
 ```
@@ -297,7 +297,7 @@ is drawn on the map for each, at the specified co-ordinates, with a 'popup' that
   
 <img align="right" src="https://github.com/bennylynch/banksy/raw/master/data/demo.gif" alt="demo" />
 
-So, what have we learned? Well, regarding the question weset out to answer, not much (although there are some striking coincidences in 2010). But we have learned that doing this kind of thing
+So, what have we learned? Well, regarding the question we set out to answer, not much (although there are some striking coincidences in 2010). But we have learned that doing this kind of thing
 in F# is tremendous fun, type providers let you get data from many different sources, easily and without ceremony. We have learned that Suave is a beautifuly put together library for creating
 web servers, in a functional, compositional style. And most of all, we have learned that whatever you do in F#, chances are, Tomas Petricek had some hand in it, so buy him a beer when you see 
 him next. 
