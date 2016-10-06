@@ -9,7 +9,7 @@ aka 3D, based on uncanny coincidences of banksy art-works appearing in places wh
 Earlier this year, academics at Queen Mary University, London, used Geoprofiling (in R, no less), to ['prove' that
 banksy was in fact Robert Gunningham] (http://www.independent.co.uk/news/people/banksy-geographic-profiling-proves-artist-really-is-robin-gunningham-according-to-scientists-a6909896.html), using the locations of 140 art works in London and Bristol, and locations 
 Gunningham was known to have lived in. I thought this latest claim could be investigated using a similar approach, with F# &
-type providers. To clone the git repo 
+type providers. To follow along, clone the [git repo] (https://github.com/bennylynch/banksy) , thus
 ```
 git clone https://github.com/bennylynch/banksy.git
 ```
@@ -246,9 +246,9 @@ let eventStream =
 ```
 To have the events being sent down the sockets periodically in date order, eventStream uses a timer ticking every second. Observable.scan is used
 here to increment a counter with every Elapsed event. The mod of the counter against the length of the list of Massive Attack gigs is used as an index into the list -
-this means that when the counter exceeds the length of the list, it will start agai from the beginning. The year of the current Massive Attack gig is used to retrieve
+this means that when the counter exceeds the length of the list, it will start again from the beginning. The year of the current Massive Attack gig is used to retrieve
 the array of Banksys works apearing that year. Each of these are serialised to Json strings (again, using the Json Type provider), which are returned from Observable.map
-as a string * string tuple. Thus, the type of eventStream is IObservable<string * string>. The combined stream is split into 2, thus:
+as a string * string tuple. Thus, the type of eventStream is IObservable\<string * string\>. The combined stream is split into 2, thus:
 ```fsharp
 ///split the combined stream Observable<string,string> into 2
 let _,mattakGigEvents = eventStream |> Observable.map (fun (m,b) -> m)  |> Observable.start
@@ -263,12 +263,12 @@ let socketOfObservable (updates:IObservable<string>) (webSocket:WebSocket) cx = 
     let! update = updates |> Async.AwaitObservable |> Suave.Sockets.SocketOp.ofAsync
     do! webSocket.send Text (System.Text.Encoding.UTF8.GetBytes update) true }
 ```
-Sauve's workhouse type is WebPart, which is just a type alias for HttpContext -> Async<HttpContext option>. So, WebPart is a function accepting an incoming HttpContext (request),
+Sauve's workhouse type is WebPart, which is just a type alias for HttpContext -> Async\<HttpContext option\>. So, WebPart is a function accepting an incoming HttpContext (request),
 and returning a HttpContext option (thus, an 'empty' response can be returned), wrapped in an async workflow. A suave server is started using the startWebServer function,
 which takes arguments of SuaveConfig (an object to configure the server - which port to listen on, &c.) and WebPart. Routing in the world of Sauve is done using the choose function -
-this takes a list of WebPart<_>s, returning (choosing) the first one returning Some (or None ..). The 2 final peices of the puzzle are the path function, which takes a string
+this takes a list of WebPart<_>s, returning (choosing) the first one returning Some (or None, if none do). The 2 final peices of the puzzle are the path function, which takes a string
 (representing the navigated path) returning a WebPart if the request path matches, and the >=> (fish) operator, which composes 2 WebParts into one, by evaluating the left hand side,
-and applies the right hand side, if the LHS part returns Some. This all sounds fairly involved, but the end result actually looks quite intuitive:
+and applying the right hand side, if the LHS part returns Some. This all sounds fairly involved, but the end result actually looks quite intuitive:
 ```fsharp
 let webPart =
     choose [
@@ -281,7 +281,7 @@ let webPart =
 Thus, the webPart routing function is exposing 3 explicit paths, the first 2 for the websockets; the handShake function is used to 'capture' the incomming WebScoket request,
 passing it in to the provided conitinuation function. The 3rd path is a normal http get returning some Json used to colour the map in the page (details not shown). The last route
 is used for serving static files - pathRegex is similar to path, but matches the incoming path to a regular expression, as opposed to an explicit path. Thus, any path with one of
-the specified extensions, will be served from the server's homeFolder (if it exists ..). All that is left to do, then, is start the server, using the webPart function as the 'WebPart':
+the specified extensions, will be served from the server's homeFolder (if the file exists ..). All that is left to do, then, is start the server, using the webPart function as the 'WebPart':
 ```fsharp
 let _, run = startWebServerAsync config webPart
 let ct = new System.Threading.CancellationTokenSource()
@@ -299,5 +299,5 @@ is drawn on the map for each, at the specified co-ordinates, with a 'popup' that
 
 So, what have we learned? Well, regarding the question we set out to answer, not much (although there are some striking coincidences in 2010). But we have learned that doing this kind of thing
 in F# is tremendous fun, type providers let you get data from many different sources, easily and without ceremony. We have learned that Suave is a beautifuly put together library for creating
-web servers, in a functional, compositional style. And most of all, we have learned that whatever you do in F#, chances are, Tomas Petricek had some hand in it, so buy him a beer when you see 
-him next. 
+web servers, in a functional, compositional style (although we have barely scratched the surface of what it can do). And finally, we have learned that whatever you do in F#, chances are, 
+Tomas Petricek had some hand in it, so buy him a beer when you see him next.
